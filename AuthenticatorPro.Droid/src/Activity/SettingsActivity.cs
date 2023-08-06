@@ -14,6 +14,7 @@ using AuthenticatorPro.Droid.Interface.Fragment;
 using AuthenticatorPro.Droid.Interface.Preference;
 using AuthenticatorPro.Droid.Storage;
 using Javax.Crypto;
+using Serilog;
 using System;
 using BiometricManager = AndroidX.Biometric.BiometricManager;
 using BiometricPrompt = AndroidX.Biometric.BiometricPrompt;
@@ -24,6 +25,7 @@ namespace AuthenticatorPro.Droid.Activity
     [Activity]
     internal class SettingsActivity : SensitiveSubActivity, ISharedPreferencesOnSharedPreferenceChangeListener
     {
+        private readonly ILogger _log = Log.ForContext<SettingsActivity>();
         private PreferenceWrapper _preferences;
         private SecureStorageWrapper _secureStorageWrapper;
         private readonly IAuthenticatorService _authenticatorService;
@@ -177,7 +179,7 @@ namespace AuthenticatorPro.Droid.Activity
                 }
                 catch (Exception e)
                 {
-                    Logger.Error(e);
+                    _log.Error(e, "Failed to reset copy counts");
                     Toast.MakeText(this, Resource.String.genericError, ToastLength.Short).Show();
                 }
             };
@@ -288,7 +290,7 @@ namespace AuthenticatorPro.Droid.Activity
             }
             catch (Exception e)
             {
-                Logger.Error("Key invalidated or unrecoverable", e);
+                _log.Error(e, "Key invalidated or unrecoverable");
                 return true;
             }
 
@@ -310,7 +312,7 @@ namespace AuthenticatorPro.Droid.Activity
                 }
                 catch (Exception e)
                 {
-                    Logger.Error(e);
+                    _log.Error(e, "Failed to store cipher");
                     callback(false);
                     return;
                 }
@@ -347,7 +349,7 @@ namespace AuthenticatorPro.Droid.Activity
             }
             catch (Exception e)
             {
-                Logger.Error(e);
+                _log.Error(e, "Failed to get encryption cipher");
                 passwordStorage.Clear();
                 callback(false);
                 return;

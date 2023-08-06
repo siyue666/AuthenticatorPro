@@ -14,6 +14,7 @@ using AuthenticatorPro.Droid.Util;
 using Google.Android.Material.Button;
 using Google.Android.Material.ProgressIndicator;
 using Google.Android.Material.TextField;
+using Serilog;
 using System;
 
 namespace AuthenticatorPro.Droid.Interface.Fragment
@@ -21,6 +22,7 @@ namespace AuthenticatorPro.Droid.Interface.Fragment
     internal class UnlockBottomSheet : BottomSheet
     {
         public event EventHandler<string> UnlockAttempted;
+        private readonly ILogger _log = Log.ForContext<UnlockBottomSheet>();
 
         private PreferenceWrapper _preferences;
         private BiometricPrompt _prompt;
@@ -141,7 +143,7 @@ namespace AuthenticatorPro.Droid.Interface.Fragment
                 }
                 catch (Exception e)
                 {
-                    Logger.Error(e);
+                    _log.Error(e, "Failed to fetch biometrics cipher");
                     Toast.MakeText(Context, Resource.String.genericError, ToastLength.Short);
                     return;
                 }
@@ -177,7 +179,7 @@ namespace AuthenticatorPro.Droid.Interface.Fragment
             }
             catch (Exception e)
             {
-                Logger.Error(e);
+                _log.Error(e, "Failed to authenticate");
                 _canUseBiometrics = false;
                 _useBiometricsButton.Enabled = false;
                 FocusPasswordText();

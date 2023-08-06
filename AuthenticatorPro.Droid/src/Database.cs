@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
 using AuthenticatorPro.Core.Entity;
+using Serilog;
 using SQLite;
 using System;
 using System.IO;
@@ -17,6 +18,7 @@ namespace AuthenticatorPro.Droid
         private const SQLiteOpenFlags Flags = SQLiteOpenFlags.Create | SQLiteOpenFlags.ReadWrite |
                                               SQLiteOpenFlags.FullMutex | SQLiteOpenFlags.SharedCache;
 
+        private readonly ILogger _log = Log.ForContext<Database>();
         private readonly SemaphoreSlim _lock = new(1, 1);
         private SQLiteAsyncConnection _connection;
 
@@ -43,7 +45,7 @@ namespace AuthenticatorPro.Droid
         {
             await _lock.WaitAsync();
             var isOpen = _connection != null;
-            Logger.Debug($"Is database open from {origin}? {isOpen}");
+            _log.Debug("Is database open from {Origin}? {IsOpen}", origin, isOpen);
             _lock.Release();
             return isOpen;
         }
@@ -58,7 +60,7 @@ namespace AuthenticatorPro.Droid
                 return;
             }
 
-            Logger.Debug($"Closing database from {origin}");
+            _log.Debug("Closing database from {Origin}", origin);
 
             try
             {
@@ -74,7 +76,7 @@ namespace AuthenticatorPro.Droid
         public async Task Open(string password, Origin origin)
         {
             await Close(origin);
-            Logger.Debug($"Opening database from {origin}");
+            _log.Debug("Opening database from {Origin}", origin);
 
             var path = GetPath();
             var firstLaunch = !File.Exists(path);
@@ -110,7 +112,7 @@ namespace AuthenticatorPro.Droid
 
 #if DEBUG
             _connection.Trace = true;
-            _connection.Tracer = Logger.Debug;
+            _connection.Tracer = _log.Debug;
             _connection.TimeExecution = true;
 #endif
 

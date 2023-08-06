@@ -10,6 +10,7 @@ using AuthenticatorPro.Droid.Shared.Wear;
 using AuthenticatorPro.Core.Service;
 using Java.IO;
 using Newtonsoft.Json;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,8 +30,9 @@ namespace AuthenticatorPro.Droid
     {
         private const string GetSyncBundleCapability = "get_sync_bundle";
 
-        private readonly Database _database;
-        private readonly SemaphoreSlim _lock;
+        private readonly ILogger _log = Log.ForContext<WearQueryService>();
+        private readonly Database _database = new();
+        private readonly SemaphoreSlim _lock = new(1, 1);
         private SecureStorageWrapper _secureStorageWrapper;
 
         private readonly IAuthenticatorView _authenticatorView;
@@ -39,9 +41,6 @@ namespace AuthenticatorPro.Droid
 
         public WearQueryService()
         {
-            _database = new Database();
-            _lock = new SemaphoreSlim(1, 1);
-
             using var container = Dependencies.GetChildContainer();
             container.Register(_database);
             Dependencies.RegisterRepositories(container);
@@ -171,7 +170,7 @@ namespace AuthenticatorPro.Droid
 
         public override async void OnChannelOpened(ChannelClient.IChannel channel)
         {
-            Logger.Debug($"Wear channel opened: {channel.Path}");
+            _log.Debug("Wear channel opened: {Path}", channel.Path);
 
             if (channel.Path != GetSyncBundleCapability)
             {
@@ -184,7 +183,7 @@ namespace AuthenticatorPro.Droid
             }
             catch (Exception e)
             {
-                Logger.Error(e);
+                _log.Error(e, "Error sending sync bundle");
             }
         }
     }

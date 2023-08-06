@@ -8,9 +8,13 @@ using Android.Runtime;
 using AndroidX.Lifecycle;
 using AuthenticatorPro.Droid.Activity;
 using Java.Interop;
+using Serilog;
+using Serilog.Exceptions;
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using System.Timers;
+using Environment = System.Environment;
 
 namespace AuthenticatorPro.Droid
 {
@@ -30,6 +34,8 @@ namespace AuthenticatorPro.Droid
 
         public BaseApplication(IntPtr javaReference, JniHandleOwnership transfer) : base(javaReference, transfer)
         {
+            InitLogger();
+
             Dependencies.Register();
             Dependencies.RegisterApplicationContext(this);
 
@@ -37,6 +43,31 @@ namespace AuthenticatorPro.Droid
             PreventNextAutoLock = false;
 
             _database = Dependencies.Resolve<Database>();
+        }
+
+        private static void InitLogger()
+        {
+            var logPath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.Personal),
+                "events.log"
+            );
+
+            var configuration = new LoggerConfiguration();
+
+#if DEBUG
+            configuration = configuration.MinimumLevel.Debug();
+#else
+            configuration = configuration.MinimumLevel.Information();
+#endif
+
+            Log.Logger = configuration
+                .Enrich.FromLogContext()
+                .Enrich.WithExceptionDetails()
+                .WriteTo.Sink(new LogcatSink())
+                .WriteTo.File(logPath, rollingInterval: RollingInterval.Day, retainedFileCountLimit: 1,
+                    outputTemplate:
+                    "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level:u3}] ({SourceContext}) {Message}{NewLine}{Exception}")
+                .CreateLogger();
         }
 
         public override void OnCreate()
@@ -76,7 +107,7 @@ namespace AuthenticatorPro.Droid
 
         private void HandleException(Exception exception)
         {
-            Logger.Error(exception);
+            Log.Error(exception, "Unhandled exception");
             var intent = new Intent(this, typeof(ErrorActivity));
             intent.SetFlags(ActivityFlags.NewTask);
             intent.PutExtra("exception", exception.ToString());
@@ -127,6 +158,7 @@ namespace AuthenticatorPro.Droid
         public async void OnDestroyed()
         {
             await _database.Close(Database.Origin.Application);
+            await Log.CloseAndFlushAsync();
         }
     }
 }

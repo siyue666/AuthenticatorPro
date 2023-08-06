@@ -22,6 +22,7 @@ using Google.Android.Material.Dialog;
 using Google.Android.Material.MaterialSwitch;
 using Google.Android.Material.TextView;
 using Java.Util.Concurrent;
+using Serilog;
 using System;
 using Uri = Android.Net.Uri;
 
@@ -29,6 +30,8 @@ namespace AuthenticatorPro.Droid.Interface.Fragment
 {
     internal class AutoBackupSetupBottomSheet : BottomSheet
     {
+        private readonly ILogger _log = Log.ForContext<AutoBackupSetupBottomSheet>();
+
         private PreferenceWrapper _preferences;
         private SecureStorageWrapper _secureStorageWrapper;
         
@@ -203,7 +206,7 @@ namespace AuthenticatorPro.Droid.Interface.Fragment
             }
             catch (ActivityNotFoundException e)
             {
-                Logger.Error(e);
+                _log.Error(e, "Activity not found for intent {Intent}", intent.Action);
                 Toast.MakeText(Context, Resource.String.filePickerMissing, ToastLength.Long);
                 baseApplication.PreventNextAutoLock = false;
             }
@@ -248,7 +251,7 @@ namespace AuthenticatorPro.Droid.Interface.Fragment
             }
             catch (Exception e)
             {
-                Logger.Error(e);
+                _log.Error(e, "Failed to get document name for uri {Uri}", uri);
                 dirName = "Unknown";
             }
 

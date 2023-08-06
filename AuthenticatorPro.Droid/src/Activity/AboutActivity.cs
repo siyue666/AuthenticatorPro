@@ -9,6 +9,7 @@ using Android.Webkit;
 using AuthenticatorPro.Droid.Util;
 using Google.Android.Material.AppBar;
 using Google.Android.Material.Color;
+using Serilog;
 using System;
 
 namespace AuthenticatorPro.Droid.Activity
@@ -16,6 +17,8 @@ namespace AuthenticatorPro.Droid.Activity
     [Activity]
     internal class AboutActivity : BaseActivity
     {
+        private readonly ILogger _log = Log.ForContext<AboutActivity>();
+
         public AboutActivity() : base(Resource.Layout.activityAbout) { }
 
         protected override async void OnCreate(Bundle savedInstanceState)
@@ -43,7 +46,7 @@ namespace AuthenticatorPro.Droid.Activity
             }
             catch (Exception e)
             {
-                Logger.Error(e);
+                _log.Error(e, "Failed to get current version");
                 version = "unknown";
             }
             

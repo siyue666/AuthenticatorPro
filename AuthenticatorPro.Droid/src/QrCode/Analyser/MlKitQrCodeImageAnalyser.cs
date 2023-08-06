@@ -9,6 +9,7 @@ using Android.Runtime;
 using Android.Util;
 using AndroidX.Camera.Core;
 using Java.Lang;
+using Serilog;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -16,6 +17,7 @@ using Xamarin.Google.MLKit.Common;
 using Xamarin.Google.MLKit.Vision.BarCode;
 using Xamarin.Google.MLKit.Vision.Barcode.Common;
 using Xamarin.Google.MLKit.Vision.Common;
+using Log = Serilog.Log;
 
 namespace AuthenticatorPro.Droid.QrCode.Analyser
 {
@@ -23,7 +25,8 @@ namespace AuthenticatorPro.Droid.QrCode.Analyser
     {
         public event EventHandler<string> QrCodeScanned;
         public Size DefaultTargetResolution => new(1920, 1080);
-        
+
+        private readonly ILogger _log = Log.ForContext<MlKitQrCodeImageAnalyser>();
         private const int ScanInterval = 500;
 
         private long _lastScanMillis;
@@ -37,7 +40,7 @@ namespace AuthenticatorPro.Droid.QrCode.Analyser
             }
             catch (IllegalStateException e)
             {
-                Logger.Warn("MlKit already initialised", e);
+                _log.Warning(e, "MlKit already initialised");
             }
             
             var options = new BarcodeScannerOptions.Builder()

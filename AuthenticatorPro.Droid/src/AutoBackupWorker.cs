@@ -14,6 +14,7 @@ using AuthenticatorPro.Droid.Util;
 using AuthenticatorPro.Core.Backup;
 using AuthenticatorPro.Core.Backup.Encryption;
 using AuthenticatorPro.Core.Service;
+using Serilog;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -25,10 +26,11 @@ namespace AuthenticatorPro.Droid
     {
         public const string Name = "autobackup";
 
+        private readonly ILogger _log = Log.ForContext<AutoBackupWorker>();
         private readonly Context _context;
         private readonly PreferenceWrapper _preferences;
         private readonly SecureStorageWrapper _secureStorageWrapper;
-        private readonly Database _database;
+        private readonly Database _database = new();
         private readonly IBackupService _backupService;
 
         private enum NotificationContext
@@ -41,7 +43,6 @@ namespace AuthenticatorPro.Droid
             _context = context;
             _preferences = new PreferenceWrapper(context);
             _secureStorageWrapper = new SecureStorageWrapper(context);
-            _database = new Database();
 
             using var container = Dependencies.GetChildContainer();
             container.Register(_database);
@@ -215,7 +216,7 @@ namespace AuthenticatorPro.Droid
                 catch (Exception e)
                 {
                     ShowNotification(NotificationContext.BackupFailure, true);
-                    Logger.Error(e);
+                    _log.Error(e, "Error performing backup");
                     return Result.InvokeFailure();
                 }
                 finally

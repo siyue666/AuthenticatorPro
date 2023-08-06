@@ -7,6 +7,7 @@ using Android.Content;
 using Android.Gms.Extensions;
 using Android.Runtime;
 using Java.Lang;
+using Serilog;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -21,6 +22,8 @@ namespace AuthenticatorPro.Droid.QrCode.Reader
 {
     public class MlKitQrCodeReader : IQrCodeReader
     {
+        private readonly ILogger _log = Log.ForContext<MlKitQrCodeReader>();
+
         public async Task<string> ScanImageFromFileAsync(Context context, Uri uri)
         {
             try
@@ -29,7 +32,7 @@ namespace AuthenticatorPro.Droid.QrCode.Reader
             }
             catch (IllegalStateException e)
             {
-                Logger.Warn("MlKit already initialised", e);
+                _log.Warning(e, "MlKit already initialised");
             }
             
             InputImage image;

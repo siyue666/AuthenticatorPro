@@ -8,6 +8,7 @@ using AndroidX.Preference;
 using Java.Security;
 using Javax.Crypto;
 using Javax.Crypto.Spec;
+using Serilog;
 using System;
 using System.Text;
 
@@ -28,13 +29,13 @@ namespace AuthenticatorPro.Droid.Storage
         private const string Transformation = Algorithm + "/" + BlockMode + "/" + Padding;
 #pragma warning restore CA1416
 
+        private readonly ILogger _log = Log.ForContext<BiometricStorage>();
         private readonly ISharedPreferences _preferences;
-        private readonly object _lock;
+        private readonly object _lock = new();
 
         public BiometricStorage(Context context)
         {
             _preferences = PreferenceManager.GetDefaultSharedPreferences(context);
-            _lock = new object();
         }
 
         private static void GenerateKey()
@@ -146,7 +147,7 @@ namespace AuthenticatorPro.Droid.Storage
                 catch (KeyStoreException e)
                 {
                     // Perhaps the key doesn't exist?
-                    Logger.Error(e);
+                    _log.Error(e, "Failed to clear keystore entry");
                 }
             }
 
