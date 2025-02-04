@@ -1,1 +1,1 @@
-Aplicación 2FA libre de código abierto con copias de seguridad cifradas
+Aplicación 2FA de código abierto con copias de seguridad encriptadas
